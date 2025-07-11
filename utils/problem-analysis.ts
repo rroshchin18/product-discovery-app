@@ -9,38 +9,40 @@ export interface ProblemAnalysis {
 }
 
 const rootCauseIndicators = [
-  "manual",
-  "process",
-  "system",
-  "workflow",
-  "handoff",
-  "integration",
-  "automation",
-  "bottleneck",
-  "delay",
-  "failure",
-  "breakdown",
-  "gap",
+  "manual process",
+  "system failure",
+  "integration issue",
+  "workflow bottleneck",
+  "process gap",
+  "automation failure",
+  "handoff delay",
+  "system limitation",
+  "configuration error",
+  "capacity constraint",
+  "resource shortage",
+  "technical debt",
+  "legacy system",
+  "data synchronization",
+  "api timeout",
+  "database issue",
 ]
 
 const symptomIndicators = [
-  "complaints",
-  "unhappy",
-  "frustrated",
-  "slow",
-  "bad",
-  "poor",
+  "customers complain",
+  "users frustrated",
+  "slow response",
+  "poor experience",
   "dissatisfied",
-  "angry",
-  "upset",
-  "disappointed",
+  "unhappy",
+  "angry customers",
+  "bad reviews",
+  "complaints",
+  "frustrated users",
 ]
 
 const bankingDomainTerms = [
   "regulatory",
   "compliance",
-  "dispute",
-  "resolution",
   "ach",
   "processing",
   "sla",
@@ -50,22 +52,15 @@ const bankingDomainTerms = [
   "cfpb",
   "occ",
   "examination",
+  "audit",
   "penalty",
-]
-
-const stakeholderTypes = [
-  "customer",
-  "client",
-  "user",
-  "team",
-  "staff",
-  "employee",
-  "operations",
-  "compliance",
-  "support",
-  "management",
-  "executive",
-  "regulator",
+  "risk",
+  "capital",
+  "liquidity",
+  "dispute",
+  "resolution",
+  "reporting",
+  "filing",
 ]
 
 export function analyzeProblemStatement(
@@ -78,7 +73,7 @@ export function analyzeProblemStatement(
 ): ProblemAnalysis {
   const insights: string[] = []
 
-  // Analyze issue field
+  // Analyze issue quality
   const issueAnalysis = analyzeIssueField(problemStatement.issue, scenarioId)
   const affectedAnalysis = analyzeAffectedField(problemStatement.affected, scenarioId)
   const impactAnalysis = analyzeBusinessImpact(problemStatement.businessImpact, scenarioId)
@@ -99,11 +94,11 @@ export function analyzeProblemStatement(
   else overallClarity = "poor"
 
   // Generate reasoning
-  const reasoning = generateProblemReasoning(issueAnalysis, affectedAnalysis, impactAnalysis)
+  const reasoning = generateProblemReasoning(issueAnalysis, affectedAnalysis, impactAnalysis, score)
 
   return {
     score,
-    insights,
+    insights: insights.slice(0, 4),
     issueQuality: issueAnalysis.score,
     affectedQuality: affectedAnalysis.score,
     impactQuality: impactAnalysis.score,
@@ -116,55 +111,63 @@ function analyzeIssueField(issue: string, scenarioId: string) {
   const insights: string[] = []
   let score = 0
 
+  if (!issue || issue.trim().length === 0) {
+    insights.push("Issue description is required")
+    return { score: 0, insights }
+  }
+
   const lowerIssue = issue.toLowerCase()
-  const wordCount = issue.split(/\s+/).length
 
   // Length and detail analysis
-  if (issue.length < 30) {
+  if (issue.length < 20) {
     insights.push("Issue description too brief - add specific details about what's broken")
     score += 10
-  } else if (issue.length < 80) {
-    insights.push("Good length, but could be more specific about the root cause")
-    score += 25
+  } else if (issue.length < 50) {
+    insights.push("Good start - consider adding more context about the root cause")
+    score += 30
+  } else if (issue.length < 100) {
+    score += 50
+    insights.push("Good detail level in issue description")
   } else {
-    score += 35
+    score += 40
+    insights.push("Very detailed - ensure focus remains on core issue")
   }
 
   // Root cause vs symptoms analysis
-  const rootCauseWords = rootCauseIndicators.filter((word) => lowerIssue.includes(word))
-  const symptomWords = symptomIndicators.filter((word) => lowerIssue.includes(word))
+  const hasRootCause = rootCauseIndicators.some((indicator) => lowerIssue.includes(indicator.toLowerCase()))
+  const hasSymptoms = symptomIndicators.some((indicator) => lowerIssue.includes(indicator.toLowerCase()))
 
-  if (rootCauseWords.length === 0 && symptomWords.length > 0) {
-    insights.push("Focus on root causes (what's broken) rather than symptoms (how people feel)")
+  if (hasRootCause && !hasSymptoms) {
+    score += 30
+    insights.push("Excellent focus on root causes rather than symptoms")
+  } else if (hasRootCause && hasSymptoms) {
+    score += 20
+    insights.push("Good root cause identification, but consider reducing symptom focus")
+  } else if (!hasRootCause && hasSymptoms) {
     score += 5
-  } else if (rootCauseWords.length > 0) {
-    insights.push(`Good root cause focus: identified ${rootCauseWords.join(", ")} issues`)
-    score += 25
+    insights.push("Focus on what's broken in the process, not just how people feel about it")
+  } else {
+    score += 15
+    insights.push("Consider what specific process or system is failing")
   }
 
   // Banking domain specificity
-  const domainTerms = bankingDomainTerms.filter((term) => lowerIssue.includes(term))
-  if (domainTerms.length > 0) {
-    insights.push(`Strong domain knowledge: used ${domainTerms.join(", ")}`)
+  const hasDomainTerms = bankingDomainTerms.some((term) => lowerIssue.includes(term.toLowerCase()))
+  if (hasDomainTerms) {
     score += 20
+    insights.push("Good use of banking-specific terminology")
   } else {
-    insights.push("Consider using more banking-specific terminology")
+    insights.push("Consider using more banking industry-specific terms")
   }
 
   // Scenario-specific analysis
-  if (scenarioId.includes("regulatory") && !lowerIssue.includes("regulat") && !lowerIssue.includes("complian")) {
-    insights.push("Regulatory scenarios should emphasize compliance aspects")
-  }
-
-  if (scenarioId.includes("delay") && !lowerIssue.includes("delay") && !lowerIssue.includes("time")) {
-    insights.push("Consider mentioning timing/delay aspects for this scenario")
-  }
-
-  // Specificity analysis
-  const vagueTerms = ["problem", "issue", "bad", "poor", "not working"]
-  const vagueCount = vagueTerms.filter((term) => lowerIssue.includes(term)).length
-  if (vagueCount > 2) {
-    insights.push("Replace vague terms with specific descriptions of what's failing")
+  const scenarioKeywords = getScenarioKeywords(scenarioId)
+  const hasScenarioContext = scenarioKeywords.some((keyword) => lowerIssue.includes(keyword.toLowerCase()))
+  if (hasScenarioContext) {
+    score += 15
+    insights.push("Good alignment with scenario context")
+  } else {
+    insights.push(`Consider mentioning ${scenarioKeywords.join(" or ")} aspects for this scenario`)
   }
 
   return { score: Math.min(100, score), insights }
@@ -174,56 +177,58 @@ function analyzeAffectedField(affected: string, scenarioId: string) {
   const insights: string[] = []
   let score = 0
 
+  if (!affected || affected.trim().length === 0) {
+    insights.push("Affected parties description is required")
+    return { score: 0, insights }
+  }
+
   const lowerAffected = affected.toLowerCase()
 
   // Length analysis
-  if (affected.length < 20) {
+  if (affected.length < 15) {
     insights.push("Expand on who is affected - include both external and internal stakeholders")
     score += 10
+  } else if (affected.length < 40) {
+    score += 30
+    insights.push("Good coverage of affected parties")
   } else {
-    score += 25
+    score += 40
+    insights.push("Comprehensive stakeholder impact analysis")
   }
 
-  // Customer impact analysis
-  const customerTerms = ["customer", "client", "user", "account holder"]
-  const hasCustomerImpact = customerTerms.some((term) => lowerAffected.includes(term))
+  // External stakeholder analysis
+  const externalTerms = ["customer", "client", "user", "account holder", "member", "borrower"]
+  const hasExternalImpact = externalTerms.some((term) => lowerAffected.includes(term))
 
-  if (hasCustomerImpact) {
-    insights.push("Good - identified customer impact, crucial for executive attention")
+  if (hasExternalImpact) {
     score += 25
+    insights.push("Good identification of customer/external impact")
   } else {
-    insights.push("Missing customer impact - always consider external stakeholder effects")
+    insights.push("Consider how customers or external parties are affected")
   }
 
   // Internal stakeholder analysis
-  const internalTerms = ["team", "staff", "operations", "compliance", "support", "management"]
+  const internalTerms = ["team", "staff", "operations", "compliance", "support", "management", "analyst", "officer"]
   const hasInternalImpact = internalTerms.some((term) => lowerAffected.includes(term))
 
   if (hasInternalImpact) {
-    insights.push("Excellent - considered internal team impact for resource planning")
-    score += 25
+    score += 20
+    insights.push("Good consideration of internal team impact")
   } else {
-    insights.push("Consider which internal teams are affected by this problem")
+    insights.push("Consider which internal teams are affected")
   }
 
-  // Regulatory stakeholder analysis
+  // Regulatory stakeholder analysis for relevant scenarios
   if (scenarioId.includes("regulatory") || scenarioId.includes("compliance")) {
-    const regulatoryTerms = ["regulator", "compliance", "audit", "examination"]
+    const regulatoryTerms = ["regulator", "compliance", "audit", "examination", "supervisor"]
     const hasRegulatoryImpact = regulatoryTerms.some((term) => lowerAffected.includes(term))
 
     if (hasRegulatoryImpact) {
-      insights.push("Strong regulatory awareness - identified compliance stakeholder impact")
-      score += 25
+      score += 15
+      insights.push("Strong regulatory awareness")
     } else {
       insights.push("For regulatory issues, consider regulator/auditor perspectives")
     }
-  }
-
-  // Specificity analysis
-  const specificRoles = affected.match(/\b(manager|analyst|officer|lead|director|specialist)\b/gi)
-  if (specificRoles && specificRoles.length > 0) {
-    insights.push("Good specificity - identified specific roles affected")
-    score += 15
   }
 
   return { score: Math.min(100, score), insights }
@@ -231,47 +236,85 @@ function analyzeAffectedField(affected: string, scenarioId: string) {
 
 function analyzeBusinessImpact(businessImpact: string, scenarioId: string) {
   const insights: string[] = []
-  let score = 0
+  let score = 60 // Base score for selecting an impact
 
   if (!businessImpact) {
-    insights.push("Select a business impact to complete your problem statement")
+    insights.push("Business impact selection is required")
     return { score: 0, insights }
   }
 
   // Scenario-specific impact analysis
-  const impactMapping = {
-    "ach-transfer-delays": "regulatory-risk",
-    "mobile-security-breach": "regulatory-risk",
-    "credit-application-delays": "revenue",
-    "digital-platform-outage": "operational-cost",
-    "regulatory-reporting-failure": "regulatory-risk",
-  }
+  const expectedImpacts = getExpectedImpacts(scenarioId)
 
-  const expectedImpact = impactMapping[scenarioId as keyof typeof impactMapping]
-
-  if (businessImpact === expectedImpact) {
-    insights.push("Correct primary impact - aligns with scenario's main business risk")
+  if (expectedImpacts.primary.includes(businessImpact)) {
     score = 100
+    insights.push("Perfect alignment - this is the primary business risk for this scenario")
+  } else if (expectedImpacts.secondary.includes(businessImpact)) {
+    score = 75
+    insights.push("Good choice - this is a significant concern for this scenario")
   } else {
-    const impactLabels = {
-      "regulatory-risk": "Regulatory Risk",
-      "operational-cost": "Operational Cost",
-      "customer-trust": "Customer Trust",
-      revenue: "Revenue Impact",
-      "sla-violation": "SLA Violation",
-    }
-
-    const selectedLabel = impactLabels[businessImpact as keyof typeof impactLabels]
-    const expectedLabel = impactLabels[expectedImpact as keyof typeof impactLabels]
-
-    insights.push(`${selectedLabel} is a concern, but ${expectedLabel} is the primary risk for this scenario`)
-    score = 60
+    score = 40
+    const primaryLabel = formatImpactLabel(expectedImpacts.primary[0])
+    insights.push(`Consider ${primaryLabel} as the primary risk for this scenario type`)
   }
 
   return { score, insights }
 }
 
-function generateProblemReasoning(issueAnalysis: any, affectedAnalysis: any, impactAnalysis: any): string {
+function getScenarioKeywords(scenarioId: string): string[] {
+  const keywords: Record<string, string[]> = {
+    "ach-transfer-delays": ["transfer", "ach", "delay", "processing"],
+    "mobile-security-breach": ["security", "breach", "mobile", "vulnerability"],
+    "credit-application-delays": ["credit", "application", "delay", "approval"],
+    "digital-platform-outage": ["outage", "platform", "downtime", "availability"],
+    "regulatory-reporting-failure": ["reporting", "regulatory", "compliance", "filing"],
+  }
+  return keywords[scenarioId] || ["process", "system"]
+}
+
+function getExpectedImpacts(scenarioId: string) {
+  const impacts: Record<string, { primary: string[]; secondary: string[] }> = {
+    "ach-transfer-delays": {
+      primary: ["regulatory-risk"],
+      secondary: ["operational-cost", "customer-trust"],
+    },
+    "mobile-security-breach": {
+      primary: ["regulatory-risk"],
+      secondary: ["customer-trust", "operational-cost"],
+    },
+    "credit-application-delays": {
+      primary: ["revenue"],
+      secondary: ["customer-trust", "operational-cost"],
+    },
+    "digital-platform-outage": {
+      primary: ["operational-cost"],
+      secondary: ["customer-trust", "sla-violation"],
+    },
+    "regulatory-reporting-failure": {
+      primary: ["regulatory-risk"],
+      secondary: ["operational-cost", "sla-violation"],
+    },
+  }
+  return impacts[scenarioId] || { primary: ["operational-cost"], secondary: ["customer-trust"] }
+}
+
+function formatImpactLabel(impact: string): string {
+  const labels: Record<string, string> = {
+    "regulatory-risk": "Regulatory Risk",
+    "operational-cost": "Operational Cost",
+    "customer-trust": "Customer Trust",
+    revenue: "Revenue Impact",
+    "sla-violation": "SLA Violation",
+  }
+  return labels[impact] || impact
+}
+
+function generateProblemReasoning(
+  issueAnalysis: any,
+  affectedAnalysis: any,
+  impactAnalysis: any,
+  score: number,
+): string {
   const strengths = []
   const improvements = []
 
@@ -290,6 +333,14 @@ function generateProblemReasoning(issueAnalysis: any, affectedAnalysis: any, imp
   }
   if (improvements.length > 0) {
     reasoning += `Focus on ${improvements.join(" and ")}.`
+  }
+
+  if (score >= 85) {
+    reasoning += " Excellent problem statement that provides clear direction for solutions."
+  } else if (score >= 70) {
+    reasoning += " Good foundation with room for refinement."
+  } else {
+    reasoning += " Consider adding more specific details and context."
   }
 
   return reasoning || "Well-structured problem statement with room for refinement."

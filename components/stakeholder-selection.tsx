@@ -134,8 +134,9 @@ export function StakeholderSelection({ scenario }: StakeholderSelectionProps) {
       <div className="space-y-4">
         <div>
           <p className="text-sm text-gray-600 mb-4">
-            Select up to 5 key stakeholders who should be involved in addressing this banking product challenge. Drag
-            and drop or click to add them to your working group.
+            Select up to 5 key stakeholders who should be involved in addressing this banking product challenge.
+            <span className="hidden sm:inline">Drag and drop or click to add them to your working group.</span>
+            <span className="sm:hidden">Tap to add them to your working group.</span>
           </p>
         </div>
 
@@ -145,27 +146,30 @@ export function StakeholderSelection({ scenario }: StakeholderSelectionProps) {
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-gray-900">Working Group</h4>
+              <h4 className="font-medium text-gray-900 text-sm sm:text-base">Working Group</h4>
               <Badge variant="secondary">{submission.selectedStakeholders.length}/5</Badge>
             </div>
 
             {submission.selectedStakeholders.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p className="text-sm">Drop stakeholders here or click to add</p>
+              <div className="text-center py-6 sm:py-8 text-gray-500">
+                <p className="text-sm">
+                  <span className="hidden sm:inline">Drop stakeholders here or click to add</span>
+                  <span className="sm:hidden">Tap stakeholders below to add</span>
+                </p>
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {submission.selectedStakeholders.map((stakeholderId) => {
                   const stakeholder = availableStakeholders.find((s) => s.id === stakeholderId)
                   return stakeholder ? (
-                    <Badge key={stakeholderId} variant="default" className="flex items-center gap-1">
-                      {stakeholder.name}
+                    <Badge key={stakeholderId} variant="default" className="flex items-center gap-1 text-xs py-1 px-2">
+                      <span className="truncate max-w-32 sm:max-w-none">{stakeholder.name}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        className="h-4 w-4 p-0 hover:bg-transparent ml-1"
                         onClick={() => removeStakeholder(stakeholderId)}
                       >
                         <X className="h-3 w-3" />
@@ -180,32 +184,36 @@ export function StakeholderSelection({ scenario }: StakeholderSelectionProps) {
 
         {/* Available Stakeholders */}
         <div>
-          <h4 className="font-medium text-gray-900 mb-3">Available Stakeholders</h4>
-          <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
+          <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Available Stakeholders</h4>
+          <div className="grid grid-cols-1 gap-2 max-h-64 sm:max-h-80 overflow-y-auto">
             {availableStakeholders
               .filter((s) => !submission.selectedStakeholders.includes(s.id))
               .map((stakeholder) => (
                 <div
                   key={stakeholder.id}
-                  draggable
+                  draggable={!window.matchMedia("(max-width: 768px)").matches}
                   onDragStart={(e) => handleDragStart(e, stakeholder.id)}
-                  className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg cursor-move hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors active:bg-gray-100 touch-manipulation"
                   onClick={() => addStakeholder(stakeholder.id)}
                 >
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{stakeholder.name}</div>
-                    <Badge variant="outline" className="mt-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{stakeholder.name}</div>
+                    <Badge variant="outline" className="mt-1 text-xs">
                       {stakeholder.department}
                     </Badge>
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="w-4 h-4 text-gray-400" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">{stakeholder.description}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <div className="ml-2 flex-shrink-0">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Info className="w-4 h-4 text-gray-400" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs">
+                        <p>{stakeholder.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
               ))}
           </div>

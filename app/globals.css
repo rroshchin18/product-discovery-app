@@ -10,6 +10,29 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Improve touch targets on mobile */
+  @media (max-width: 768px) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* Smooth scrolling for mobile */
+  .scroll-smooth {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Better focus states for mobile */
+  .focus-visible-mobile {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+  }
 }
 
 @layer base {
@@ -90,5 +113,52 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Mobile-specific improvements */
+  @media (max-width: 768px) {
+    /* Improve tap targets */
+    button,
+    [role="button"],
+    input[type="checkbox"],
+    input[type="radio"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Better text input experience */
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    /* Smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Better focus states */
+    *:focus-visible {
+      outline: 2px solid hsl(var(--ring));
+      outline-offset: 2px;
+    }
+  }
+}
+
+/* Custom scrollbar for mobile */
+@media (max-width: 768px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
   }
 }

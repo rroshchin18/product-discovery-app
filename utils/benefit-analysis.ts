@@ -104,18 +104,13 @@ export function analyzeBenefitSelection(selectedIds: string[], scenarioId: strin
 
   // Identify critical and high-priority benefits for this scenario
   const criticalBenefits = benefitRelevance.filter((b) => b.scenarioRelevance >= 80 && b.priority === "critical")
-
   const highBenefits = benefitRelevance.filter((b) => b.scenarioRelevance >= 70 && b.priority === "high")
-
   const lowRelevanceBenefits = benefitRelevance.filter((b) => b.scenarioRelevance < 50)
 
   // Analyze selections
   const selectedBenefits = selectedIds.map((id) => benefitRelevance.find((b) => b.id === id)).filter(Boolean)
-
   const selectedCorrect = selectedBenefits.filter((b) => b && b.scenarioRelevance >= 70).map((b) => b!.name)
-
   const selectedIncorrect = selectedBenefits.filter((b) => b && b.scenarioRelevance < 50).map((b) => b!.name)
-
   const missedCritical = criticalBenefits.filter((b) => !selectedIds.includes(b.id)).map((b) => b.name)
 
   // Calculate sophisticated score
@@ -181,7 +176,7 @@ export function analyzeBenefitSelection(selectedIds: string[], scenarioId: strin
 
   return {
     score: Math.round(score),
-    insights,
+    insights: insights.slice(0, 3),
     strategicAlignment,
     prioritization,
     reasoning,

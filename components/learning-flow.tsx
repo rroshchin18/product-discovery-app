@@ -74,53 +74,98 @@ export function LearningFlow() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 backdrop-blur-sm bg-white/95">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hover:bg-gray-100 transition-colors duration-200"
-              onClick={handleHomeClick}
-            >
-              <Home className="w-4 h-4" />
-            </Button>
-            {currentStep > 0 && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between md:hidden">
+            <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={goToPreviousStep}
-                className="hover:bg-gray-100 transition-all duration-200 hover:-translate-x-1"
+                className="hover:bg-gray-100 transition-colors duration-200 p-2"
+                onClick={handleHomeClick}
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                <Home className="w-4 h-4" />
               </Button>
+              {currentStep > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goToPreviousStep}
+                  className="hover:bg-gray-100 transition-all duration-200 p-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {currentStep > 0 && (
+              <div className="flex items-center space-x-2">
+                <div className="text-xs text-gray-600 max-w-24 truncate">{steps[currentStep].title}</div>
+                <Progress value={progress} className="w-16" />
+              </div>
             )}
-            {currentScenario && ScenarioIcon && (
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-gray-100 transition-colors duration-200"
+                onClick={handleHomeClick}
+              >
+                <Home className="w-4 h-4" />
+              </Button>
+              {currentStep > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goToPreviousStep}
+                  className="hover:bg-gray-100 transition-all duration-200 hover:-translate-x-1"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+              )}
+              {currentScenario && ScenarioIcon && (
+                <div className="flex items-center space-x-2">
+                  <ScenarioIcon className="w-4 h-4 text-gray-600" />
+                  <Badge variant="outline" className="text-xs">
+                    {currentScenario.title}
+                  </Badge>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-4">
+              {currentStep > 0 && (
+                <>
+                  <span className="text-sm text-gray-600 animate-in fade-in-0 duration-300">
+                    {steps[currentStep].title}
+                  </span>
+                  <div className="relative">
+                    <Progress value={progress} className="w-32 transition-all duration-500 ease-out" />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Scenario Badge */}
+          {currentScenario && ScenarioIcon && (
+            <div className="flex items-center justify-center mt-2 md:hidden">
               <div className="flex items-center space-x-2">
                 <ScenarioIcon className="w-4 h-4 text-gray-600" />
                 <Badge variant="outline" className="text-xs">
                   {currentScenario.title}
                 </Badge>
               </div>
-            )}
-          </div>
-          <div className="flex items-center space-x-4">
-            {currentStep > 0 && (
-              <>
-                <span className="text-sm text-gray-600 animate-in fade-in-0 duration-300">
-                  {steps[currentStep].title}
-                </span>
-                <div className="relative">
-                  <Progress value={progress} className="w-32 transition-all duration-500 ease-out" />
-                </div>
-              </>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
         <div key={currentStep} className="animate-in slide-in-from-right-4 fade-in-0 duration-500">
           {currentStep === 0 ? (
             <CurrentComponent onSelectScenario={handleScenarioSelect} />

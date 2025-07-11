@@ -1,92 +1,100 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, XCircle } from "lucide-react"
+import { CheckCircle, XCircle, User } from "lucide-react"
 
 interface StakeholderCardProps {
   stakeholder: {
     id: string
     name: string
+    role: string
     department: string
     description: string
-    isCorrect: boolean
-    reasoning: string
-    priority: string
+    expertise: string[]
+    priority: "critical" | "important" | "optional"
   }
   isSelected: boolean
   showFeedback: boolean
   onToggle: (id: string, checked: boolean) => void
+  disabled?: boolean
 }
 
-export function InteractiveStakeholderCard({ stakeholder, isSelected, showFeedback, onToggle }: StakeholderCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
-
+export function InteractiveStakeholderCard({
+  stakeholder,
+  isSelected,
+  showFeedback,
+  onToggle,
+  disabled = false,
+}: StakeholderCardProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "critical":
         return "bg-red-100 text-red-800 border-red-200"
       case "important":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-orange-100 text-orange-800 border-orange-200"
+      case "optional":
+        return "bg-gray-100 text-gray-800 border-gray-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
 
+  const getSelectionFeedback = () => {
+    if (!showFeedback) return null
+
+    // This would be enhanced with actual scenario-specific logic
+    const isCorrectForScenario = stakeholder.priority === "critical" || stakeholder.priority === "important"
+
+    if (isSelected && isCorrectForScenario) {
+      return <CheckCircle className="w-4 h-4 text-green-500" />
+    } else if (isSelected && !isCorrectForScenario) {
+      return <XCircle className="w-4 h-4 text-red-500" />
+    }
+    return null
+  }
+
   return (
     <Card
       className={`transition-all duration-300 cursor-pointer hover:shadow-md ${
-        isSelected ? "ring-2 ring-blue-500 bg-blue-50 border-blue-200" : "hover:bg-gray-50 border-gray-200"
-      } ${isHovered ? "scale-[1.02]" : ""}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onToggle(stakeholder.id, !isSelected)}
+        isSelected ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      onClick={() => !disabled && onToggle(stakeholder.id, !isSelected)}
     >
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           <Checkbox
-            id={stakeholder.id}
             checked={isSelected}
-            onCheckedChange={(checked) => onToggle(stakeholder.id, checked as boolean)}
+            onCheckedChange={(checked) => !disabled && onToggle(stakeholder.id, checked as boolean)}
+            disabled={disabled}
             className="mt-1"
             onClick={(e) => e.stopPropagation()}
           />
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h3 className="font-medium text-sm text-gray-900 leading-tight">{stakeholder.name}</h3>
-                <p className="text-xs text-gray-600 mt-1">{stakeholder.department}</p>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-gray-500" />
+                <h3 className="font-medium text-sm text-gray-900 truncate">{stakeholder.name}</h3>
+                {showFeedback && getSelectionFeedback()}
               </div>
-              <Badge
-                variant="outline"
-                className={`text-xs ${getPriorityColor(stakeholder.priority)} animate-in fade-in-0 duration-300`}
-              >
-                {stakeholder.priority}
-              </Badge>
+              <Badge className={`text-xs ${getPriorityColor(stakeholder.priority)}`}>{stakeholder.priority}</Badge>
             </div>
 
-            <p className="text-xs text-gray-700 mb-3 leading-relaxed">{stakeholder.description}</p>
+            <p className="text-sm font-medium text-gray-700 mb-1">{stakeholder.role}</p>
+            <p className="text-xs text-gray-600 mb-2">{stakeholder.department}</p>
+            <p className="text-xs text-gray-600 mb-3 line-clamp-2">{stakeholder.description}</p>
 
-            {showFeedback && (
-              <div className="animate-in slide-in-from-top-2 duration-500 delay-200">
-                <div
-                  className={`flex items-start space-x-2 p-2 rounded-lg ${
-                    stakeholder.isCorrect ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
-                  }`}
-                >
-                  {stakeholder.isCorrect ? (
-                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 animate-in scale-in-0 duration-300" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-red-600 mt-0.5 animate-in scale-in-0 duration-300" />
-                  )}
-                  <p className={`text-xs leading-relaxed ${stakeholder.isCorrect ? "text-green-800" : "text-red-800"}`}>
-                    {stakeholder.reasoning}
-                  </p>
-                </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-700">Expertise:</p>
+              <div className="flex flex-wrap gap-1">
+                {stakeholder.expertise.map((skill, index) => (
+                  <Badge key={index} variant="outline" className="text-xs px-1 py-0">
+                    {skill}
+                  </Badge>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </CardContent>
